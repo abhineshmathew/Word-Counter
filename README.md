@@ -1,169 +1,143 @@
-# Word Counter
 
-A simple, yet robust app for submitting text and counting/storing words via a worker and message broker/DB architecture. Built with Flask, Redis, and PostgreSQL microservices.
+# 🐳 Word Counter App – Docker Compose Version
 
----
+This repository demonstrates a **multi-container Docker application** managed with **Docker Compose**. The project includes:
 
-## Table of Contents
-
-- [Features](#features)  
-- [Architecture](#architecture)  
-- [Getting Started](#getting-started)  
-  - [Prerequisites](#prerequisites)  
-  - [Project Structure](#project-structure)  
-  - [Setup & Run](#setup--run)  
-- [Usage](#usage)  
-- [Configuration](#configuration)  
-- [Troubleshooting](#troubleshooting)  
-- [Future Improvements](#future-improvements)  
-- [License](#license)
+- A frontend to input text
+- A worker to count words in the background
+- Redis as a message queue
+- PostgreSQL to store results
+- A result frontend to display the word counts
 
 ---
 
-## Features
+## 📘 What is Docker Compose?
 
-- Frontend web interface to submit text  
-- Worker service to process submitted text asynchronously  
-- Use of Redis for quick queue handling  
-- Use of PostgreSQL for persistence & more complex operations  
-- Dockerized setup with `docker-compose` for easy local development  
+**Docker Compose** is a tool used to define and manage multi-container Docker applications. It uses a YAML file (`docker-compose.yml`) to configure the application’s services, networks, and volumes.
 
 ---
 
-## Architecture
+## ❓ Why Use Docker Compose?
 
-Here’s a high-level overview of how the components interact:
-
-| Component | Responsibility |
-|-----------|----------------|
-| **Frontend** | Flask application that renders a form for text input, submits text to backend/queues and displays the result or status. |
-| **Worker** | Listens to a queue (via Redis), pulls tasks, processes text (word count or further logic), and stores results in PostgreSQL. |
-| **Redis** | Message broker / queue for decoupling frontend and worker. |
-| **PostgreSQL (db)** | Persistence layer for any results or advanced analytics. |
-
-Components are connected via Docker networking in `docker-compose`. Dependencies are dynamically handled so worker waits until the database is available before running.
+- Manage **multiple containers** with a single command
+- Easier to define networks, volumes, and dependencies
+- Supports version control with a single config file
+- Ideal for **development, testing, and teaching**
 
 ---
 
-## Getting Started
+## ⚙️ Installing Docker Compose
 
-### Prerequisites
+Docker Compose is included in **Docker CLI v2+**, so if you have Docker installed, you likely already have Compose:
 
-You’ll need the following installed:
+```bash
+docker compose version
+````
 
-- [Docker](https://www.docker.com/)  
-- [Docker Compose](https://docs.docker.com/compose/)  
-- Git (to clone the repository)  
+If not installed, follow the [official instructions](https://docs.docker.com/compose/install/) for your OS.
 
-### Project Structure
+---
 
-Here’s the typical directory layout:
+## 🛠️ Docker Compose Commands
 
+| Command                 | Description                              |
+| ----------------------- | ---------------------------------------- |
+| `docker compose up`     | Start all services in the background     |
+| `docker compose down`   | Stop and remove all containers/networks  |
+| `docker compose ps`     | Show running services                    |
+| `docker compose logs`   | View logs of all services                |
+| `docker compose build`  | Build images defined in the compose file |
+| `docker compose config` | Validate and view the final YAML config  |
+
+---
+
+## 🚀 How to Run This Project
+
+### 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/bhuvan-raj/Docker-Compose-WordCounter.git
 ```
-Word‑Counter/
-├── frontend/             # Flask app for user input
-│   ├── Dockerfile
-│   └── app.py
-├── worker/               # Worker service
-│   ├── Dockerfile
-│   ├── worker.py
-│   └── worker-entrypoint.sh
-├── docker-compose.yaml   # Or docker-compose.yml
-└── README.md             # You are here
+```
+cd Docker-Compose-WordCounter
 ```
 
----
 
-### Setup & Run
+### 2️⃣ Run the Application
 
-1. **Clone the repository**
+```bash
+docker compose up -d
+```
 
-   ```bash
-   git clone https://github.com/abhineshmathew/Word‑Counter.git
-   cd Word‑Counter
-   ```
-
-2. **Build and start services**
-
-   To build and start all services (frontend, worker, Redis, PostgreSQL):
-
-   ```bash
-   docker-compose up --build
-   ```
-
-3. **Service-specific build**
-
-   To rebuild only one service (say `worker`), do:
-
-   ```bash
-   docker-compose build worker
-   ```
-
-   or to start just that service with rebuild:
-
-   ```bash
-   docker-compose up --build worker
-   ```
-
-4. **Accessing the frontend**
-
-   Once running, open your browser and go to:
-
-   ```
-   http://localhost:5000/
-   ```
-
-   (Assumes frontend is mapped to port 5000.)
+* `-d`: Run containers in the background
 
 ---
 
-## Usage
+### 3️⃣ Check Running Containers
 
-- Navigate to the frontend web page.  
-- Enter text into the input form and submit.  
-- The text is queued via Redis, processed by the worker, and persisted into PostgreSQL (or whatever logic you’ve implemented).  
-- You can extend the worker to return the word count or other metrics.  
+```bash
+docker compose ps
+```
 
----
-
-## Configuration
-
-You may want to configure:
-
-| Environment | Description |
-|-------------|-------------|
-| `db` host/user/password | For PostgreSQL credentials in the worker and possibly frontend if needed. |
-| Redis connection settings | Host, port, and optional password (if using secured Redis). |
-| Docker network settings | Ensuring services are on the same Docker network so that hostnames (like `db`, `redis`) resolve properly. |
-
-These settings can be adjusted in `docker-compose.yaml` and in service files (`worker.py`, `frontend/app.py`) as needed.
+You should see 5 services running: `redis`, `db`, `frontend`, `worker`, and `result-frontend`.
 
 ---
 
-## Troubleshooting
+### 4️⃣ Open in Browser
 
-| Problem | Solution |
-|---------|----------|
-| Worker logs show `connection refused` to `db` | Ensure PostgreSQL container is running and healthy. Use `depends_on` and, optionally, a waiting script or retry loop so the worker doesn’t start too early. |
-| Frontend exits immediately | Check for typos (e.g. `__main__`) in app startup code. Ensure Flask is commanded correctly in the Dockerfile (with correct host and port). |
-| Permission denied to access Docker | Make sure your user is added to the `docker` group and you’ve logged out/login or restarted your terminal session. |
+* Input Form (Frontend): [http://localhost:5000](http://localhost:5000)
+* Result Viewer: [http://localhost:7000](http://localhost:7000)
 
----
-
-## Future Improvements
-
-- Add authentication so only authorized users can submit text.  
-- Make the worker support multiple tasks: e.g. word count, character count, readability metrics.  
-- Add a UI to view past submissions and their counts.  
-- Health checks for services (especially db and redis) for production readiness.  
-- Container orchestration / deployment scripts (e.g., Kubernetes or managed cloud).  
+Try submitting a sentence on the input page and check the result on the result page.
 
 ---
 
-## License
+### 5️⃣ Tear Down the Application
 
-_Include your license here, e.g., MIT, Apache‑2.0, etc._
+To stop and remove all containers, volumes, and networks:
+
+```bash
+docker compose down
+```
 
 ---
 
-*Built with ❤️ by Abhinesh*
+## 📂 Folder Structure
+
+```
+Docker-word-counter-app/
+│
+├── frontend/            # Flask app to accept text input
+├── worker/              # Background task for word counting
+├── result-frontend/     # Flask app to display results
+├── init.sql             # SQL file to create the 'results' table
+├── docker-compose.yml   # Main Compose configuration
+└── README.md            # This file
+```
+
+---
+
+## 📌 Notes for Students
+
+* All services are connected using a custom **bridge network**
+* **Redis** is used to pass messages from frontend to worker
+* **PostgreSQL** stores the final results
+* **Docker Compose** makes starting/stopping the project easy with a single command
+
+---
+
+## 🧼 Cleanup
+
+If you want to **remove everything**, including images and volumes:
+
+```bash
+docker compose down --volumes --rmi all
+```
+
+---
+
+## 📜 License
+
+MIT License
+
+---
